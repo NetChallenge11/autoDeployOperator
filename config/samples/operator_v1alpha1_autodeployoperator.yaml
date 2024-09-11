@@ -1,0 +1,12 @@
+apiVersion: operator.wnguddn777/v1alpha1
+kind: AutoDeployOperator
+metadata:
+  labels:
+    app.kubernetes.io/name: autodeploy
+    app.kubernetes.io/managed-by: kustomize
+  name: autodeployoperator-sample
+spec:
+  edgeServer: "edge-server-1"
+  coreServer: "core-server-1"
+  edgeModel: "myrepo/edge-model:latest"
+  coreModel: "myrepo/core-model:latest"
