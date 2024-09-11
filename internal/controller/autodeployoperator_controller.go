@@ -23,10 +23,12 @@ import (
 	operatorv1alpha1 "github.com/wnguddn777/autoDeploy/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -42,28 +44,39 @@ func (r *AutoDeployOperatorReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Fetch the AutoDeployOperator instance
 	autoDeploy := &operatorv1alpha1.AutoDeployOperator{}
 	if err := r.Get(ctx, req.NamespacedName, autoDeploy); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, client.IgnoreNotFound(err) // client.IgnoreNotFound를 사용합니다
 	}
 
-	// Deploy models to Edge and Core servers
-	if err := r.deployModelToServer(ctx, autoDeploy.Spec.EdgeServer, autoDeploy.Spec.EdgeModel, "edge-model-deployment"); err != nil {
+	// Deploy models to Edge and Core servers using different kubeconfigs
+	if err := r.deployModelToServer(ctx, autoDeploy.Spec.EdgeServer, autoDeploy.Spec.EdgeModel, "edge-model-deployment", autoDeploy.Spec.EdgeKubeConfig); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.deployModelToServer(ctx, autoDeploy.Spec.CoreServer, autoDeploy.Spec.CoreModel, "core-model-deployment"); err != nil {
+	if err := r.deployModelToServer(ctx, autoDeploy.Spec.CoreServer, autoDeploy.Spec.CoreModel, "core-model-deployment", autoDeploy.Spec.CoreKubeConfig); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// Update status after successful deployment
 	autoDeploy.Status.Phase = "Deployed"
 	if err := r.Status().Update(ctx, autoDeploy); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err) // client.IgnoreNotFound를 사용합니다
 	}
 
 	return ctrl.Result{}, nil
 }
 
-// deployModelToServer creates a Deployment for the model on the specified server
-func (r *AutoDeployOperatorReconciler) deployModelToServer(ctx context.Context, server, model, deploymentName string) error {
+// deployModelToServer creates a Deployment for the model on the specified server with kubeconfig
+func (r *AutoDeployOperatorReconciler) deployModelToServer(ctx context.Context, server, model, deploymentName, kubeconfigPath string) error {
+	// Create a new client using the kubeconfig for the specified server
+	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to load kubeconfig for server %s: %v", server, err)
+	}
+
+	newClient, err := client.New(kubeconfig, client.Options{})
+	if err != nil {
+		return fmt.Errorf("failed to create client for server %s: %v", server, err)
+	}
+
 	// Define a Deployment spec
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -92,7 +105,7 @@ func (r *AutoDeployOperatorReconciler) deployModelToServer(ctx context.Context, 
 							},
 							// LivenessProbe 설정 (Handler로 다시 설정)
 							LivenessProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{ // 여기에 Handler 추가
+								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/healthz",
 										Port: intstr.IntOrString{IntVal: 8080},
@@ -110,20 +123,20 @@ func (r *AutoDeployOperatorReconciler) deployModelToServer(ctx context.Context, 
 
 	// Check if the deployment already exists
 	found := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: deploymentName, Namespace: "default"}, found)
-	if err != nil && client.IgnoreNotFound(err) != nil {
+	err = r.Get(ctx, types.NamespacedName{Name: deploymentName, Namespace: "default"}, found)
+	if err != nil && !errors.IsNotFound(err) { // client.IgnoreNotFound를 사용합니다
 		return fmt.Errorf("failed to get Deployment: %v", err)
 	}
 
 	// Create or Update the Deployment
 	if found.Name == "" {
 		fmt.Printf("Creating deployment %s on server %s\n", deploymentName, server)
-		if err := r.Client.Create(ctx, deployment); err != nil {
+		if err := newClient.Create(ctx, deployment); err != nil {
 			return fmt.Errorf("failed to create Deployment: %v", err)
 		}
 	} else {
 		fmt.Printf("Updating deployment %s on server %s\n", deploymentName, server)
-		if err := r.Client.Update(ctx, deployment); err != nil {
+		if err := newClient.Update(ctx, deployment); err != nil {
 			return fmt.Errorf("failed to update Deployment: %v", err)
 		}
 	}

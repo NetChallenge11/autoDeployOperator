@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: autodeployoperator-sample
 spec:
-  edgeServer: "edge-server-1"
-  coreServer: "core-server-1"
-  edgeModel: "myrepo/edge-model:latest"
-  coreModel: "myrepo/core-model:latest"
+  edgeServer: "192.168.14.44"
+  coreServer: "192.168.15.96"
+  edgeModel: "wnguddn777/flask-ml-app"
+  coreModel: "wnguddn777/flask-ml-app"

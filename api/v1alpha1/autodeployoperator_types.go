@@ -26,10 +26,12 @@ import (
 // AutoDeployOperatorSpec defines the desired state of AutoDeployOperator
 type AutoDeployOperatorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	EdgeServer string `json:"edgeServer"`
-	CoreServer string `json:"coreServer"`
-	EdgeModel  string `json:"edgeModel"`
-	CoreModel  string `json:"coreModel"`
+	EdgeServer     string `json:"edgeServer"`
+	CoreServer     string `json:"coreServer"`
+	EdgeModel      string `json:"edgeModel"`
+	CoreModel      string `json:"coreModel"`
+	EdgeKubeConfig string `json:"edgeKubeConfig"`
+	CoreKubeConfig string `json:"coreKubeConfig"`
 }
 
 // AutoDeployOperatorStatus defines the observed state of AutoDeployOperator

@@ -40,9 +40,13 @@ spec:
           spec:
             description: AutoDeployOperatorSpec defines the desired state of AutoDeployOperator
             properties:
+              coreKubeConfig:
+                type: string
               coreModel:
                 type: string
               coreServer:
+                type: string
+              edgeKubeConfig:
                 type: string
               edgeModel:
                 type: string
@@ -50,8 +54,10 @@ spec:
                 description: INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 type: string
             required:
+            - coreKubeConfig
             - coreModel
             - coreServer
+            - edgeKubeConfig
             - edgeModel
             - edgeServer
             type: object
