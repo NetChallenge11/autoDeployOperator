@@ -26,19 +26,25 @@ import (
 // AutoDeployOperatorSpec defines the desired state of AutoDeployOperator
 type AutoDeployOperatorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	EdgeServer     string `json:"edgeServer"`
-	CoreServer     string `json:"coreServer"`
-	EdgeModel      string `json:"edgeModel"`
-	CoreModel      string `json:"coreModel"`
-	EdgeKubeConfig string `json:"edgeKubeConfig"`
-	CoreKubeConfig string `json:"coreKubeConfig"`
+	ModelName string `json:"modelName"`
+
+	Image string `json:"image"`
+
+	NodeSelector string `json:"nodeSelector"`
 }
 
 // AutoDeployOperatorStatus defines the observed state of AutoDeployOperator
 type AutoDeployOperatorStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase string `json:"phase,omitempty"`
+	// 배포가 성공했는지 여부를 나타내는 상태 정보
+	Ready bool `json:"ready"`
+
+	// 배포된 파드의 이름
+	DeploymentName string `json:"deploymentName,omitempty"`
+
+	// 모델이 배포된 노드의 이름
+	NodeName string `json:"nodeName,omitempty"`
 }
 
 //+kubebuilder:object:root=true

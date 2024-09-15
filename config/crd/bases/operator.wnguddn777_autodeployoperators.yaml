@@ -40,35 +40,35 @@ spec:
           spec:
             description: AutoDeployOperatorSpec defines the desired state of AutoDeployOperator
             properties:
-              coreKubeConfig:
+              image:
                 type: string
-              coreModel:
-                type: string
-              coreServer:
-                type: string
-              edgeKubeConfig:
-                type: string
-              edgeModel:
-                type: string
-              edgeServer:
+              modelName:
                 description: INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 type: string
+              nodeSelector:
+                type: string
             required:
-            - coreKubeConfig
-            - coreModel
-            - coreServer
-            - edgeKubeConfig
-            - edgeModel
-            - edgeServer
+            - image
+            - modelName
+            - nodeSelector
             type: object
           status:
             description: AutoDeployOperatorStatus defines the observed state of AutoDeployOperator
             properties:
-              phase:
+              deploymentName:
+                description: 배포된 파드의 이름
+                type: string
+              nodeName:
+                description: 모델이 배포된 노드의 이름
+                type: string
+              ready:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
-                type: string
+                  배포가 성공했는지 여부를 나타내는 상태 정보
+                type: boolean
+            required:
+            - ready
             type: object
         type: object
     served: true

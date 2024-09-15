@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: autodeployoperator-sample
 spec:
-  edgeServer: "192.168.14.44"
-  coreServer: "192.168.15.96"
-  edgeModel: "wnguddn777/flask-ml-app"
-  coreModel: "wnguddn777/flask-ml-app"
+  modelName: head-alexnet-split-layer-1.h5
+  image: wnguddn777/flask-ml-app
+  nodeSelector: k3d-mycluster-agent-0
